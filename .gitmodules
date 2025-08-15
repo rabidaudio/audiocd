@@ -1,3 +1,0 @@
-[submodule "firmware/atmel_start/tinyusb"]
-	path = firmware/atmel_start/tinyusb
-	url = https://github.com/hathach/tinyusb.git

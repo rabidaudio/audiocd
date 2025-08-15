@@ -8,6 +8,11 @@
 //
 // It also means it has really powerful error correction capabilities.
 //
+// It will build on non-Linux platforms with a mock implementation which
+// returns white noise.
+//
+// Example:
+//
 // [CDParanoia]: https://xiph.org/paranoia/index.html
 package audiocd
 
