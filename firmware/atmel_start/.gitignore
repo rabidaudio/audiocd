@@ -1,9 +1,0 @@
-# make products
-*.o
-*.d
-*.bin
-*.eep
-*.elf
-*.hex
-*.lss
-*.map

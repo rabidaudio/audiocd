@@ -1,8 +1,0 @@
-CMSIS/* binary
-atmel_start_config.atstart binary
-AtmelStart.* binary
-hal/* binary
-hpl/* binary
-hri/* binary
-samd21a/* binary
-thirdparty/* binary
