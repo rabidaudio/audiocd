@@ -63,7 +63,7 @@ type InterfaceType int
 // [scan_devices.c]: https://github.com/opus47/cdparanoia/blob/bc6a412bca35b03413b88e7ba2cb78c911f1d8f3/interface/scan_devices.c#L177
 type DriveType int
 
-// FullSpeed can be passed to [SetSpeed] to run the drive at its fastest speed.
+// FullSpeed can be passed to [*AudioCD.SetSpeed] to run the drive at its fastest speed.
 const FullSpeed = -1
 
 // SampleRate is the number of samples per second. All Redbook audio
@@ -88,7 +88,7 @@ const Channels = 2
 // An audio frame is the smallest valid unit of length for a track, defined
 // as 1/75th of a second. Redbook track offsets are specified in MM:SS:FF.
 //
-// Note that this definition of frame is interchangeable with sector.
+// Note that this definition of frame is interchangeable with the term "sector".
 // It is distinct from a 33-byte channel data frame, which this package does
 // not concern itself with.
 //
@@ -97,9 +97,9 @@ const Channels = 2
 // [Wikipedia]: https://en.wikipedia.org/wiki/Compact_Disc_Digital_Audio#Frames_and_timecode_frames
 const SectorsPerSecond = 75
 
-// SamplesPerFrame is the number of 16-bit audio samples per channel
-// that appear within one frame of data (294).
-const SamplesPerFrame = SampleRate / SectorsPerSecond / Channels
+// SamplesPerSector is the number of 16-bit audio samples (including both channels)
+// that appear within one frame of data (588).
+const SamplesPerSector = SampleRate / SectorsPerSecond
 
 // BytesPerSector is the number of bytes of audio contained in one sector of
 // CD data (and equivalently in one frame of samples), 2352 bytes.
@@ -115,8 +115,6 @@ type TrackPosition struct {
 	TrackNum      int  // index of the track, starting at 1
 	StartSector   int  // address of the sector where the data starts
 	LengthSectors int  // total number of sectors the track covers
-
-	// TODO: handle pregap?
 }
 
 func (t TrackPosition) IsPreemphasisEnabled() bool {
@@ -138,10 +136,11 @@ func (t TrackPosition) ContainsSector(sector int) bool {
 	return sector >= t.StartSector && sector < (t.StartSector+t.LengthSectors)
 }
 
-// AudioCD reads data from a CD-DR format cd in the disk drive.
+// AudioCD reads data from a CD-DA format cd in the disk drive.
 // If Device is specified, AudioCD will read from the specified block device.
 // Otherwise it will try to read from the first detected disk drive device.
-// An AudioCD must be [Open]ed before use. The zero value for AudioCD is ready to be opened.
+// An AudioCD must be opened with [*AudioCD.Open] before use. The zero value
+// for AudioCD is ready to be opened.
 //
 // AudioCD implements [io.ReadSeekCloser].
 //
@@ -245,7 +244,7 @@ func (cd *AudioCD) FirstAudioSector() int {
 //
 // The table of contents lists the tracks on the disk
 // and the sector offsets they can be found at.
-// It will have length of [TrackCount].
+// It will have length of [*AudioCD.TrackCount].
 func (cd *AudioCD) TOC() []TrackPosition {
 	if !cd.IsOpen() {
 		return nil
@@ -297,7 +296,8 @@ func (cd *AudioCD) IsOpen() bool {
 // checking and correcting. [ParanoiaModeFull] (the default)
 // enables all the correction features. [ParanoiaModeDisable] (0)
 // disables all checks. Individual checks can be enabled, e.g.
-// ParanoiaRepair|ParanoiaNeverSkip.
+//
+//	cd.SetParanoiaMode(audiocd.ParanoiaRepair|audiocd.ParanoiaNeverSkip)
 func (cd *AudioCD) SetParanoiaMode(flags ParanoiaFlags) {
 	setParanoia(cd, flags)
 }
@@ -377,7 +377,7 @@ func (cd *AudioCD) Seek(offset int64, whence int) (int64, error) {
 	return cd.trueOffset, nil
 }
 
-// SeekToSector seeks the cd to the specfied sector index.
+// SeekToSector seeks the cd to the specified sector index.
 // This is useful for going to the start of a track.
 func (cd *AudioCD) SeekToSector(sector int) (int64, error) {
 	return cd.Seek(int64(sector)*BytesPerSector, io.SeekStart)
@@ -460,7 +460,7 @@ func (cd *AudioCD) bufferSectors(nsectors int) error {
 }
 
 // Close releases access to the cd drive. Data can no longer be accessed
-// unless [Open]ed again.
+// unless opened again.
 //
 // Close this does not refer to controlling the drive tray.
 func (cd *AudioCD) Close() error {
