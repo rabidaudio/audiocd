@@ -153,6 +153,7 @@ type AudioCD struct {
 	Logger     *log.Logger // if LogMode == LogModeLogger, the log.Logger to use
 
 	buf            bytes.Buffer
+	sbuf           []byte
 	bufferedOffset int64
 	trueOffset     int64
 
@@ -452,10 +453,15 @@ func (cd *AudioCD) readSectors(p []byte) (int64, error) {
 }
 
 func (cd *AudioCD) bufferSectors(nsectors int) error {
-	p := make([]byte, nsectors*BytesPerSector)
-	n, err := cd.readSectors(p)
+	if cd.sbuf == nil {
+		cd.sbuf = make([]byte, nsectors*BytesPerSector)
+	}
+	if len(cd.sbuf) < nsectors*BytesPerSector {
+		cd.sbuf = make([]byte, nsectors*BytesPerSector)
+	}
+	n, err := cd.readSectors(cd.sbuf)
 	cd.bufferedOffset += n
-	cd.buf.Write(p[:n])
+	cd.buf.Write(cd.sbuf[:n])
 	return err
 }
 
