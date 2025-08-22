@@ -1,3 +1,7 @@
 {
-    "go.testTimeout": "10m"
+    "go.testTimeout": "10m",
+    "go.toolsEnvVars": {
+        "CGO_CFLAGS": "-O2 -g -I/opt/homebrew/Cellar/libcdio/2.2.0/include",
+        "CGO_LDFLAGS": "-O2 -g -L/opt/homebrew/Cellar/libcdio/2.2.0/lib"
+    }
 }
